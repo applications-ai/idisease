@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>แบบคัดกรองผู้ป่วยสงสัยโรคไข้เลือดออก</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="css/styles.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://static.line-scdn.net/liff/edge/2.1/sdk.js"></script>
+</head>
+<body onload="initializeLiff()">
+  <div class="container dengue-form">
+    <!-- Profile Section -->
+    <div id="userInfo" style="display: none;">
+      <img id="profileImage" src="" alt="Profile Image" class="rounded-circle" width="100" height="100">
+      <p id="usernameDisplay" class="mt-2 font-weight-bold"></p>
+      <p id="userIdDisplay" class="text-muted"></p>
+    </div>
+    
+    <h2><i class="fas fa-user-md"></i> แบบคัดกรองผู้ป่วยสงสัยโรคไข้เลือดออก</h2>
+
+    <form id="dengueForm">
+      <!-- PDPA Section -->
+      <div class="pdpa-box mb-4">
+        <label class="form-label">การแสดงความยินยอมให้ข้อมูล (PDPA Consenting)</label>
+        <div class="form-check">
+          <input class="form-check-input" type="checkbox" id="pdpaConsent" value="ยินยอม" required>
+          <label class="form-check-label" for="pdpaConsent">ยินยอมให้ข้อมูล</label>
+        </div>
+      </div>
+
+      <!-- Reporter Information -->
+      <div class="form-group mb-3">
+        <label for="reporterName" class="form-label">ชื่อ-สกุล (ผู้ให้ข้อมูล)</label>
+        <div class="input-group">
+          <span class="input-group-text"><i class="fas fa-user"></i></span>
+          <input type="text" class="form-control" id="reporterName" placeholder="หากไม่มีให้เว้นว่าง">
+        </div>
+      </div>
+
+      <div class="form-group mb-3">
+        <label for="reporterPhone" class="form-label">เบอร์โทรศัพท์ (ผู้ให้ข้อมูล)</label>
+        <div class="input-group">
+          <span class="input-group-text"><i class="fas fa-phone"></i></span>
+          <input type="tel" class="form-control" id="reporterPhone" placeholder="หากไม่มีให้เว้นว่าง">
+        </div>
+      </div>
+
+      <!-- Patient Information -->
+      <div class="form-group mb-3">
+        <label for="patientName" class="form-label">ชื่อ-สกุล (ผู้ป่วยที่มีอาการสงสัย)</label>
+        <div class="input-group">
+          <span class="input-group-text"><i class="fas fa-user"></i></span>
+          <input type="text" class="form-control" id="patientName" required>
+        </div>
+      </div>
+
+      <div class="form-group mb-3">
+        <label for="patientPhone" class="form-label">เบอร์โทรศัพท์ (ผู้ป่วยที่มีอาการสงสัย)</label>
+        <div class="input-group">
+          <span class="input-group-text"><i class="fas fa-phone"></i></span>
+          <input type="tel" class="form-control" id="patientPhone" required>
+        </div>
+      </div>
+
+      <!-- Additional Information -->
+      <div class="form-group mb-3">
+        <label for="occupation" class="form-label">อาชีพ</label>
+        <select class="form-select" id="occupation" required>
+          <option value="">กรุณาเลือก</option>
+          <option>นักเรียน นักศึกษา</option>
+          <option>เกษตรกรรม</option>
+          <option>รับจ้าง</option>
+          <option>รับราชการ</option>
+          <option>อื่นๆ</option>
+        </select>
+      </div>
+
+      <!-- Address Information -->
+      <div class="form-group mb-3">
+        <label for="address" class="form-label">บ้านเลขที่</label>
+        <div class="input-group">
+          <span class="input-group-text"><i class="fas fa-home"></i></span>
+          <input type="text" class="form-control" id="address" required>
+        </div>
+      </div>
+
+      <div class="form-group mb-3">
+        <label for="villageNumber" class="form-label">หมู่ที่</label>
+        <input type="text" class="form-control" id="villageNumber" required>
+      </div>
+
+      <div class="form-group mb-3">
+        <label for="subdistrict" class="form-label">ตำบล</label>
+        <select class="form-select" id="subdistrict" required>
+          <option value="">กรุณาเลือก</option>
+          <option>นิคมพัฒนา</option>
+          <option>ปาล์มพัฒนา</option>
+        </select>
+      </div>
+
+      <!-- Symptoms Section -->
+      <div class="symptoms-section">
+        <div class="form-group mb-3">
+          <label class="form-label">มีไข้สูงลอย หรือมีไข้สูงกว่า 38 องศา เกิน 2 วัน หรือไม่ (1 คะแนน)</label>
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="highFever" id="highFeverYes" value="มี" required>
+            <label class="form-check-label" for="highFeverYes">มี</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="highFever" id="highFeverNo" value="ไม่มี" required>
+            <label class="form-check-label" for="highFeverNo">ไม่มี</label>
+          </div>
+        </div>
+
+        <div class="form-group mb-3">
+          <label class="form-label">ปวดศีรษะรุนแรง หรือไม่ (1 คะแนน)</label>
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="severeHeadache" id="severeHeadacheYes" value="มี" required>
+            <label class="form-check-label" for="severeHeadacheYes">มี</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="severeHeadache" id="severeHeadacheNo" value="ไม่มี" required>
+            <label class="form-check-label" for="severeHeadacheNo">ไม่มี</label>
+          </div>
+        </div>
+
+        <div class="form-group mb-3">
+          <label class="form-label">ปวดเมื่อยตามตัว หรือไม่ (1 คะแนน)</label>
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="bodyPain" id="bodyPainYes" value="มี" required>
+            <label class="form-check-label" for="bodyPainYes">มี</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="bodyPain" id="bodyPainNo" value="ไม่มี" required>
+            <label class="form-check-label" for="bodyPainNo">ไม่มี</label>
+          </div>
+        </div>
+
+        <div class="form-group mb-3">
+          <label class="form-label">ปวดกระบอกตา หรือไม่ (1 คะแนน)</label>
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="eyePain" id="eyePainYes" value="มี" required>
+            <label class="form-check-label" for="eyePainYes">มี</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="eyePain" id="eyePainNo" value="ไม่มี" required>
+            <label class="form-check-label" for="eyePainNo">ไม่มี</label>
+          </div>
+        </div>
+
+        <div class="form-group mb-3">
+          <label class="form-label">มีจ้ำเลือดหรือจุดเลือดตามผิวหนัง หรือไม่ (1 คะแนน)</label>
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="skinBruises" id="skinBruisesYes" value="มี" required>
+            <label class="form-check-label" for="skinBruisesYes">มี</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="skinBruises" id="skinBruisesNo" value="ไม่มี" required>
+            <label class="form-check-label" for="skinBruisesNo">ไม่มี</label>
+          </div>
+        </div>
+
+        <div class="form-group mb-3">
+          <label class="form-label">ตอนนี้ครอบครัว มีผู้ป่วยไข้เลือดออกหรือไม่ (1 คะแนน)</label>
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="familyDengue" id="familyDengueYes" value="มี" required>
+            <label class="form-check-label" for="familyDengueYes">มี</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="familyDengue" id="familyDengueNo" value="ไม่มี" required>
+            <label class="form-check-label" for="familyDengueNo">ไม่มี</label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Service Area -->
+      <div class="form-group mb-3">
+        <label for="serviceArea" class="form-label">ท่านอยู่ในเขตบริการของหน่วยบริการใด</label>
+        <select class="form-select" id="serviceArea" required>
+          <option value="">กรุณาเลือก</option>
+          <option>โรงพยาบาลมะนัง</option>
+          <option>รพ.สต.ปาล์มพัฒนา</option>
+          <option>รพ.สต.บ้านมะนัง</option>
+          <option>รพ.สต.บ้านผัง 50</option>
+          <option>สถานีอนามัยบ้านผัง 15 (สอน)</option>
+        </select>
+      </div>
+
+      <!-- Score Display -->
+      <div class="form-group mb-3">
+        <label for="totalScore" class="form-label">คะแนนรวม</label>
+        <input type="text" class="form-control" id="totalScore" readonly>
+      </div>
+
+      <!-- Submit Button -->
+      <div class="submit-btn">
+        <button type="button" class="btn btn-primary" onclick="submitForm()">
+          <i class="fas fa-paper-plane"></i> ประเมินความเสี่ยง
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Scripts -->
+  <script src="js/config.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/notification.js"></script>
+  <script src="js/dengue-form.js"></script>
+</body>
+</html>
