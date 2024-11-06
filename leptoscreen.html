@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>แบบคัดกรองผู้ป่วยสงสัยโรคฉี่หนู</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://static.line-scdn.net/liff/edge/2.1/sdk.js"></script>
+  <style>
+    :root {
+      --primary-color: #006064;
+      --secondary-color: #00838f;
+      --accent-color: #4dd0e1;
+      --background-color: #e0f7fa;
+      --form-background: #ffffff;
+      --warning-color: #ff5722;
+      --text-color: #37474f;
+      --profile-shadow: rgba(0, 96, 100, 0.15);
+    }
+    
+    body {
+      background-color: var(--background-color);
+      font-family: Arial, sans-serif;
+    }
+    
+    .container {
+      background-color: var(--form-background);
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 96, 100, 0.1);
+      max-width: 800px;
+      margin: auto;
+      margin-top: 20px;
+      margin-bottom: 20px;
+    }
+    
+    /* Profile section styling */
+    #userInfo {
+      background: linear-gradient(135deg, var(--form-background) 0%, var(--background-color) 100%);
+      border-radius: 15px;
+      padding: 25px;
+      margin-bottom: 30px;
+      box-shadow: 0 4px 15px var(--profile-shadow);
+      border: 1px solid rgba(77, 208, 225, 0.2);
+      position: relative;
+      overflow: hidden;
+    }
+    
+    #userInfo::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, var(--accent-color), var(--secondary-color));
+    }
+    
+    #profileImage {
+      border: 3px solid var(--accent-color);
+      padding: 3px;
+      background-color: white;
+      box-shadow: 0 4px 8px var(--profile-shadow);
+      transition: transform 0.3s ease;
+    }
+    
+    #profileImage:hover {
+      transform: scale(1.05);
+    }
+    
+    #usernameDisplay {
+      color: var(--primary-color);
+      font-weight: bold;
+      margin-top: 15px;
+      margin-bottom: 5px;
+      font-size: 1.2rem;
+      text-shadow: 1px 1px 1px rgba(255, 255, 255, 0.8);
+    }
+    
+    #userIdDisplay {
+      color: var(--text-color);
+      opacity: 0.8;
+      font-size: 0.9rem;
+      background-color: rgba(77, 208, 225, 0.1);
+      padding: 4px 12px;
+      border-radius: 20px;
+      display: inline-block;
+    }
+
+    h2 {
+      color: var(--primary-color);
+      margin-bottom: 25px;
+      font-weight: bold;
+      border-bottom: 3px solid var(--accent-color);
+      padding-bottom: 10px;
+    }
+    
+    .form-label {
+      color: var(--primary-color);
+      font-weight: 600;
+    }
+    
+    .form-control, .form-select {
+      border: 2px solid #e0f7fa;
+      border-radius: 8px;
+      transition: all 0.3s ease;
+    }
+    
+    .form-control:focus, .form-select:focus {
+      border-color: var(--accent-color);
+      box-shadow: 0 0 0 0.2rem rgba(77, 208, 225, 0.25);
+    }
+    
+    .btn-primary {
+      background-color: var(--secondary-color);
+      border: none;
+      border-radius: 8px;
+      padding: 10px 30px;
+      font-weight: 600;
+      transition: all 0.3s ease;
+    }
+    
+    .btn-primary:hover {
+      background-color: var(--primary-color);
+      transform: translateY(-2px);
+    }
+    
+    .alert-field {
+      border-color: var(--warning-color) !important;
+      background-color: rgba(255, 87, 34, 0.1) !important;
+    }
+    
+    .form-check-input:checked {
+      background-color: var(--secondary-color);
+      border-color: var(--secondary-color);
+    }
+    
+    .input-group-text {
+      background-color: var(--accent-color);
+      border: none;
+      color: var(--primary-color);
+    }
+
+    .pdpa-box {
+      border: 2px solid var(--accent-color) !important;
+      background-color: rgba(77, 208, 225, 0.1) !important;
+      border-radius: 10px !important;
+    }
+    
+    .risk-factors {
+      background-color: rgba(77, 208, 225, 0.05);
+      padding: 15px;
+      border-radius: 8px;
+      border-left: 4px solid var(--accent-color);
+    }
+    
+    #totalScore {
+      font-size: 1.2em;
+      font-weight: bold;
+      color: var(--primary-color);
+      background-color: rgba(77, 208, 225, 0.1);
+    }
+  </style>
+  
+</head>
+<body onload="initializeLiff()">
+  <div class="container mt-5">
+    <div id="userInfo" class="text-center mb-4" style="display: none;">
+      <img id="profileImage" src="" alt="Profile Image" class="rounded-circle" width="100" height="100">
+      <p id="usernameDisplay" class="mt-2 font-weight-bold"></p>
+      <p id="userIdDisplay" class="text-muted"></p>
+    </div>
+    
+    <h2><i class="fas fa-user-md"></i> แบบคัดกรองผู้ป่วยสงสัยโรคฉี่หนู</h2>
+
+    
+    <form id="leptospirosisForm">
+<div class="mb-4 p-3" style="border: 2px solid #007bff; border-radius: 8px; background-color: #e9f7ff;">
+        <label class="form-label" style="font-size: 1.1rem; font-weight: bold; color: #007bff;">การแสดงความยินยอมให้ข้อมูล (PDPA Consenting)</label>
+        <div class="form-check">
+          <input class="form-check-input" type="checkbox" id="pdpaConsent" value="ยินยอม" required>
+          <label class="form-check-label" for="pdpaConsent" style="font-size: 1rem; font-weight: 600;">ยินยอมให้ข้อมูล</label>
+        </div>
+      </div>
+      <div class="mb-3">
+        <label for="reporterName" class="form-label">ชื่อ-สกุล (ผู้ให้ข้อมูล)</label>
+        <div class="input-group">
+          <span class="input-group-text"><i class="fas fa-user"></i></span>
+          <input type="text" class="form-control" id="reporterName" placeholder="หากไม่มีให้เว้นว่าง" style="color: #6c757d;">
+        </div>
+      </div>
+      <div class="mb-3">
+        <label for="reporterPhone" class="form-label">เบอร์โทรศัพท์ (ผู้ให้ข้อมูล)</label>
+        <div class="input-group">
+          <span class="input-group-text"><i class="fas fa-phone"></i></span>
+          <input type="tel" class="form-control" id="reporterPhone" placeholder="หากไม่มีให้เว้นว่าง" style="color: #6c757d;">
+        </div>
+      </div>
+      <div class="mb-3">
+        <label for="patientName" class="form-label">ชื่อ-สกุล (ผู้ป่วยที่มีอาการสงสัย)</label>
+        <div class="input-group">
+          <span class="input-group-text"><i class="fas fa-user"></i></span>
+          <input type="text" class="form-control" id="patientName" required>
+        </div>
+      </div>
+      <div class="mb-3">
+        <label for="patientPhone" class="form-label">เบอร์โทรศัพท์ (ผู้ป่วยที่มีอาการสงสัย)</label>
+        <div class="input-group">
+          <span class="input-group-text"><i class="fas fa-phone"></i></span>
+          <input type="tel" class="form-control" id="patientPhone" required>
+        </div>
+      </div>
+      <div class="mb-3">
+        <label for="occupation" class="form-label">อาชีพ</label>
+        <select class="form-select" id="occupation" required>
+          <option value="">กรุณาเลือก</option>
+          <option>นักเรียน นักศึกษา</option>
+          <option>เกษตรกรรม</option>
+          <option>รับจ้าง</option>
+          <option>รับราชการ</option>
+          <option>อื่นๆ</option>
+        </select>
+      </div>
+      <div class="mb-3">
+        <label for="address" class="form-label">บ้านเลขที่</label>
+        <div class="input-group">
+          <span class="input-group-text"><i class="fas fa-home"></i></span>
+          <input type="text" class="form-control" id="address" required>
+        </div>
+      </div>
+      <div class="mb-3">
+        <label for="villageNumber" class="form-label">หมู่ที่</label>
+        <input type="text" class="form-control" id="villageNumber" required>
+      </div>
+      <div class="mb-3">
+        <label for="subdistrict" class="form-label">ตำบล</label>
+        <select class="form-select" id="subdistrict" required>
+          <option value="">กรุณาเลือก</option>
+          <option>นิคมพัฒนา</option>
+          <option>ปาล์มพัฒนา</option>
+        </select>
+      </div>
+      <div class="mb-3">
+        <label for="illnessStartDate" class="form-label">วันที่เริ่มมีอาการป่วย</label>
+        <div class="input-group">
+          <span class="input-group-text"><i class="fas fa-calendar-alt"></i></span>
+          <input type="date" class="form-control" id="illnessStartDate" required>
+        </div>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">มีไข้สูงเฉียบพลันหรือไม่ (4 คะแนน)</label>
+        <div class="form-check">
+          <input class="form-check-input" type="radio" name="fever" id="feverYes" value="มี" required>
+          <label class="form-check-label" for="feverYes">มี</label>
+        </div>
+        <div class="form-check">
+          <input class="form-check-input" type="radio" name="fever" id="feverNo" value="ไม่มี" required>
+          <label class="form-check-label" for="feverNo">ไม่มี</label>
+        </div>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">มีอาการตาแดงหรือไม่ (4 คะแนน)</label>
+        <div class="form-check">
+          <input class="form-check-input" type="radio" name="redEyes" id="redEyesYes" value="มี" required>
+          <label class="form-check-label" for="redEyesYes">มี</label>
+        </div>
+        <div class="form-check">
+          <input class="form-check-input" type="radio" name="redEyes" id="redEyesNo" value="ไม่มี" required>
+          <label class="form-check-label" for="redEyesNo">ไม่มี</label>
+        </div>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">มีอาการคอแข็งหรือไม่ (4 คะแนน)</label>
+        <div class="form-check">
+          <input class="form-check-input" type="radio" name="stiffNeck" id="stiffNeckYes" value="มี" required>
+          <label class="form-check-label" for="stiffNeckYes">มี</label>
+        </div>
+        <div class="form-check">
+          <input class="form-check-input" type="radio" name="stiffNeck" id="stiffNeckNo" value="ไม่มี" required>
+          <label class="form-check-label" for="stiffNeckNo">ไม่มี</label>
+        </div>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">มีอาการปวดกล้ามเนื้อและกดเจ็บ โดยเฉพาะน่อง โคนขา และหลัง (4 คะแนน)</label>
+        <div class="form-check">
+          <input class="form-check-input" type="radio" name="musclePain" id="musclePainYes" value="มี" required>
+          <label class="form-check-label" for="musclePainYes">มี</label>
+        </div>
+        <div class="form-check">
+          <input class="form-check-input" type="radio" name="musclePain" id="musclePainNo" value="ไม่มี" required>
+          <label class="form-check-label" for="musclePainNo">ไม่มี</label>
+        </div>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">มีอาการปวดศรีษะเฉียบพลันหรือไม่ (2 คะแนน)</label>
+        <div class="form-check">
+          <input class="form-check-input" type="radio" name="headache" id="headacheYes" value="มี" required>
+          <label class="form-check-label" for="headacheYes">มี</label>
+        </div>
+        <div class="form-check">
+          <input class="form-check-input" type="radio" name="headache" id="headacheNo" value="ไม่มี" required>
+          <label class="form-check-label" for="headacheNo">ไม่มี</label>
+        </div>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">มีอาการตัวเหลือง ตาเหลือง (2 คะแนน)</label>
+        <div class="form-check">
+          <input class="form-check-input" type="radio" name="jaundice" id="jaundiceYes" value="มี" required>
+          <label class="form-check-label" for="jaundiceYes">มี</label>
+        </div>
+        <div class="form-check">
+          <input class="form-check-input" type="radio" name="jaundice" id="jaundiceNo" value="ไม่มี" required>
+          <label class="form-check-label" for="jaundiceNo">ไม่มี</label>
+        </div>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">มีอาการเหล่านี้หรือไม่</label>
+        <select class="form-select" id="symptoms" required>
+          <option value="">กรุณาเลือก</option>
+          <option>มีน้ำมูก</option>
+          <option>มีน้ำมูกร่วมกับไอเจ็บคอ</option>
+          <option>ไม่มีอาการดังกล่าว</option>
+        </select>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">มีพฤติกรรมเสี่ยงต่อไปนี้หรือไม่ (เลือกตอบได้หลายข้อ)</label>
+        <div class="form-check">
+          <input class="form-check-input" type="checkbox" id="riskFarming" value="ทำนา ทำไร่ ทำสวน">
+          <label class="form-check-label" for="riskFarming">ทำนา ทำไร่ ทำสวน</label>
+        </div>
+        <div class="form-check">
+          <input class="form-check-input" type="checkbox" id="riskFishing" value="หาปู หาปลา หากบเขียด">
+          <label class="form-check-label" for="riskFishing">หาปู หาปลา หากบเขียด</label>
+        </div>
+        <div class="form-check">
+          <input class="form-check-input" type="checkbox" id="riskRats" value="จับหนู ชำแหละหนู">
+          <label class="form-check-label" for="riskRats">จับหนู ชำแหละหนู</label>
+        </div>
+        <div class="form-check">
+          <input class="form-check-input" type="checkbox" id="riskAnimals" value="เลี้ยงสัตว์">
+          <label class="form-check-label" for="riskAnimals">เลี้ยงสัตว์</label>
+        </div>
+        <div class="form-check">
+          <input class="form-check-input" type="checkbox" id="riskMud" value="ย่ำในน้ำ โคลนตม ที่ชื้นแฉะ">
+          <label class="form-check-label" for="riskMud">ย่ำในน้ำ โคลนตม ที่ชื้นแฉะ</label>
+        </div>
+        <div class="form-check">
+          <input class="form-check-input" type="checkbox" id="riskSwimming" value="แช่หรือว่ายน้ำในแหล่งน้ำ">
+          <label class="form-check-label" for="riskSwimming">แช่หรือว่ายน้ำในแหล่งน้ำ</label>
+        </div>
+        <div class="form-check">
+          <input class="form-check-input" type="checkbox" id="riskOther" value="อื่นๆ">
+          <label class="form-check-label" for="riskOther">อื่นๆ</label>
+        </div>
+      </div>
+      <div class="mb-3">
+        <label for="infectionArea" class="form-label">พื้นที่ที่คาดว่าจะติดเชื้อโรคไข้ฉี่หนู</label>
+        <input type="text" class="form-control" id="infectionArea">
+      </div>
+      <div class="mb-3">
+        <label for="serviceArea" class="form-label">ท่านอยู่ในเขตบริการของหน่วยบริการใด</label>
+        <select class="form-select" id="serviceArea" required>
+          <option value="">กรุณาเลือก</option>
+          <option>โรงพยาบาลมะนัง</option>
+          <option>รพ.สต.ปาล์มพัฒนา</option>
+          <option>รพ.สต.บ้านมะนัง</option>
+          <option>รพ.สต.บ้านผัง 50</option>
+          <option>สถานีอนามัยบ้านผัง 15 (สอน)</option>
+        </select>
+      </div>
+      <!-- New Score Calculation Section -->
+      <div class="mb-3">
+        <label for="totalScore" class="form-label">คะแนนรวม</label>
+        <input type="text" class="form-control" id="totalScore" readonly>
+      </div>
+
+      <div class="submit-btn">
+        <button type="button" class="btn btn-primary" onclick="submitForm()">ประเมินความเสี่ยง</button>
+      </div>
+    </form>
+  </div>
+
+  <script>
+    let userId = "";
+    let username = "";
+    let profileLoaded = false;
+
+    function initializeLiff() {
+      liff.init({
+        liffId: '2002810400-2jJ6yL9j' // แทนที่ด้วย LIFF ID ของคุณ
+      }).then(() => {
+        if (liff.isLoggedIn()) {
+          getUserId();
+        } else {
+          liff.login();
+        }
+      }).catch(err => {
+        console.error('LIFF initialization failed', err);
+      });
+    }
+
+    function getUserId() {
+      liff.getProfile().then(profile => {
+        userId = profile.userId;
+        username = profile.displayName;
+        const profileImage = profile.pictureUrl;
+
+        document.getElementById('usernameDisplay').innerText = `Username: ${username}`;
+        document.getElementById('userIdDisplay').innerText = `User ID: ${userId}`;
+        document.getElementById('profileImage').src = profileImage;
+
+        document.getElementById('userInfo').style.display = "block";
+        profileLoaded = true;
+      }).catch(err => {
+        console.error('Failed to get user profile', err);
+      });
+    }
+
+    function calculateScore() {
+      let score = 0;
+
+      // Adding scores based on the selected options
+      if (document.querySelector('input[name="fever"]:checked').value === "มี") score += 4;
+      if (document.querySelector('input[name="redEyes"]:checked').value === "มี") score += 4;
+      if (document.querySelector('input[name="stiffNeck"]:checked').value === "มี") score += 4;
+      if (document.querySelector('input[name="musclePain"]:checked').value === "มี") score += 4;
+      if (document.querySelector('input[name="headache"]:checked').value === "มี") score += 2;
+      if (document.querySelector('input[name="jaundice"]:checked').value === "มี") score += 2;
+
+      // Update total score display
+      document.getElementById('totalScore').value = score;
+    }
+
+    function submitForm() {
+  if (!profileLoaded) {
+    Swal.fire({
+      title: 'เกิดข้อผิดพลาด',
+      text: 'ไม่สามารถดึงข้อมูลผู้ใช้จาก LINE ได้ กรุณาลองใหม่อีกครั้ง',
+      icon: 'error',
+      confirmButtonText: 'ตกลง'
+    });
+    return;
+  }
+
+  const form = document.getElementById('leptospirosisForm');
+  let valid = true;
+
+  form.querySelectorAll('input, select').forEach(field => {
+    if (!field.checkValidity()) {
+      field.classList.add('alert-field');
+      valid = false;
+    } else {
+      field.classList.remove('alert-field');
+    }
+  });
+
+  if (!valid) {
+    Swal.fire({
+      title: 'กรุณากรอกข้อมูลให้ครบถ้วน',
+      text: 'มีบางฟิลด์ที่ยังไม่ได้กรอกหรือกรอกไม่ครบถ้วน',
+      icon: 'warning',
+      confirmButtonText: 'ตกลง'
+    });
+    return;
+  }
+
+  // Calculate score before submitting
+  calculateScore();
+  const totalScore = parseInt(document.getElementById('totalScore').value);
+
+  const formData = {
+    pdpaConsent: document.getElementById('pdpaConsent') ? 'ยินยอม' : '',
+    reporterName: document.getElementById('reporterName').value,
+    reporterPhone: document.getElementById('reporterPhone').value,
+    patientName: document.getElementById('patientName').value,
+    patientPhone: document.getElementById('patientPhone').value,
+    occupation: document.getElementById('occupation').value,
+    address: document.getElementById('address').value,
+    villageNumber: document.getElementById('villageNumber').value,
+    subdistrict: document.getElementById('subdistrict').value,
+    illnessStartDate: document.getElementById('illnessStartDate').value,
+    fever: document.querySelector('input[name="fever"]:checked').value,
+    redEyes: document.querySelector('input[name="redEyes"]:checked').value,
+    stiffNeck: document.querySelector('input[name="stiffNeck"]:checked').value,
+    musclePain: document.querySelector('input[name="musclePain"]:checked').value,
+    headache: document.querySelector('input[name="headache"]:checked').value,
+    jaundice: document.querySelector('input[name="jaundice"]:checked').value,
+    symptoms: document.getElementById('symptoms').value,
+    riskFactors: Array.from(document.querySelectorAll('input[type="checkbox"]:checked')).map(checkbox => checkbox.value),
+    infectionArea: document.getElementById('infectionArea').value,
+    serviceArea: document.getElementById('serviceArea').value,
+    totalScore: totalScore,
+    userId: userId,
+    username: username
+  };
+
+  fetch("https://script.google.com/macros/s/AKfycbwM47EbrJZjqLhAEyXo5qlNQABsZMyC7jw_ytvvMl3IHPPm5CW2JrWmYfs55yq4uBbR/exec", {
+    method: "POST",
+    body: JSON.stringify(formData)
+  })
+  .then(response => {
+    if (response.ok) {
+      const messageConfig = {
+        lowRisk: {
+          title: 'ผลการประเมินความเสี่ยง',
+          html: `
+            <div style="text-align: left; margin-bottom: 15px;">
+              <p><strong>คะแนนความเสี่ยงของท่านคือ ${totalScore} คะแนน</strong></p>
+              <p>คำแนะนำ:</p>
+              <ul style="margin-left: 20px;">
+                <li>โปรดสังเกตอาการอย่างต่อเนื่อง</li>
+                <li>หลีกเลี่ยงการเดินลุยน้ำ หากจำเป็นควรสวมอุปกรณ์ป้องกัน</li>
+                <li>หลังลุยน้ำให้ทำความสะอาดด้วยสบู่และน้ำสะอาดทันที</li>
+                <li>หากมีอาการเปลี่ยนแปลง ให้ประเมินความเสี่ยงใหม่อีกครั้ง</li>
+              </ul>
+            </div>`,
+          icon: 'info',
+          confirmButtonText: 'รับทราบ',
+          confirmButtonColor: '#3085d6'
+        },
+        highRisk: {
+          title: 'แจ้งเตือน! พบความเสี่ยงสูง',
+          html: `
+            <div style="text-align: left; margin-bottom: 15px;">
+              <p><strong>คะแนนความเสี่ยงของท่านคือ ${totalScore} คะแนน</strong></p>
+              <p style="color: #d33;"><strong>กรุณาดำเนินการดังนี้:</strong></p>
+              <ul style="margin-left: 20px;">
+                <li>เดินทางไปยังโรงพยาบาลหรือหน่วยบริการสาธารณสุขใกล้บ้านโดยเร็วที่สุด</li>
+                <li>แจ้งประวัติการสัมผัสปัจจัยเสี่ยงแก่บุคลากรทางการแพทย์</li>
+                <li>ปฏิบัติตามคำแนะนำของแพทย์อย่างเคร่งครัด</li>
+              </ul>
+            </div>`,
+          icon: 'warning',
+          confirmButtonText: 'รับทราบ',
+          confirmButtonColor: '#d33'
+        }
+      };
+
+      const alertConfig = totalScore >= 10 ? messageConfig.highRisk : messageConfig.lowRisk;
+      
+      Swal.fire(alertConfig).then(() => {
+        location.reload();
+      });
+    } else {
+      throw new Error('Network response was not ok.');
+    }
+  })
+  .catch(error => {
+    console.error('There was a problem with the fetch operation:', error);
+    Swal.fire({
+      title: 'เกิดข้อผิดพลาด',
+      text: 'ไม่สามารถส่งข้อมูลได้ กรุณาลองใหม่อีกครั้ง',
+      icon: 'error',
+      confirmButtonText: 'ตกลง'
+    });
+  });
+}
+
+//     function submitForm() {
+//   if (!profileLoaded) {
+//     Swal.fire({
+//       title: 'เกิดข้อผิดพลาด',
+//       text: 'ไม่สามารถดึงข้อมูลผู้ใช้จาก LINE ได้ กรุณาลองใหม่อีกครั้ง',
+//       icon: 'error',
+//       confirmButtonText: 'ตกลง'
+//     });
+//     return;
+//   }
+
+//   const form = document.getElementById('leptospirosisForm');
+//   let valid = true;
+
+//   form.querySelectorAll('input, select').forEach(field => {
+//     if (!field.checkValidity()) {
+//       field.classList.add('alert-field');
+//       valid = false;
+//     } else {
+//       field.classList.remove('alert-field');
+//     }
+//   });
+
+//   if (!valid) {
+//     Swal.fire({
+//       title: 'กรุณากรอกข้อมูลให้ครบถ้วน',
+//       text: 'มีบางฟิลด์ที่ยังไม่ได้กรอกหรือกรอกไม่ครบถ้วน',
+//       icon: 'warning',
+//       confirmButtonText: 'ตกลง'
+//     });
+//     return;
+//   }
+
+//   // Calculate score before submitting
+//   calculateScore();
+//   const totalScore = parseInt(document.getElementById('totalScore').value);
+
+//   const formData = {
+//     pdpaConsent: document.getElementById('pdpaConsent') ? 'ยินยอม' : '',
+//     reporterName: document.getElementById('reporterName').value,
+//     reporterPhone: document.getElementById('reporterPhone').value,
+//     patientName: document.getElementById('patientName').value,
+//     patientPhone: document.getElementById('patientPhone').value,
+//     occupation: document.getElementById('occupation').value,
+//     address: document.getElementById('address').value,
+//     villageNumber: document.getElementById('villageNumber').value,
+//     subdistrict: document.getElementById('subdistrict').value,
+//     illnessStartDate: document.getElementById('illnessStartDate').value,
+//     fever: document.querySelector('input[name="fever"]:checked').value,
+//     redEyes: document.querySelector('input[name="redEyes"]:checked').value,
+//     stiffNeck: document.querySelector('input[name="stiffNeck"]:checked').value,
+//     musclePain: document.querySelector('input[name="musclePain"]:checked').value,
+//     headache: document.querySelector('input[name="headache"]:checked').value,
+//     jaundice: document.querySelector('input[name="jaundice"]:checked').value,
+//     symptoms: document.getElementById('symptoms').value,
+//     riskFactors: Array.from(document.querySelectorAll('input[type="checkbox"]:checked')).map(checkbox => checkbox.value),
+//     infectionArea: document.getElementById('infectionArea').value,
+//     serviceArea: document.getElementById('serviceArea').value,
+//     totalScore: totalScore,
+//     userId: userId,
+//     username: username
+//   };
+
+//   fetch("https://script.google.com/macros/s/AKfycbxjVHoh5l2kd8FTnLsmeSmIHbxTP6fzXYO6Q4H6jI5PRt5C89V-BT0gMiZrSJRLebEHVg/exec", {
+//     method: "POST",
+//     body: JSON.stringify(formData)
+//   })
+//   .then(response => {
+//     if (response.ok) {
+//       const alertConfig = {
+//         title: totalScore > 10 ? 'แจ้งเตือนความเสี่ยงสูง!' : 'ความเสี่ยงต่ำ',
+//         text: totalScore > 10 
+//           ? 'คะแนนความเสี่ยงของท่านคือ ' + totalScore + ' คะแนน\nกรุณาเดินทางไปยังโรงพยาบาลหรือหน่วยบริการใกล้บ้านเพื่อตรวจวินิจฉัยเบื้องต้นโดยด่วน!' 
+//           : 'คะแนนความเสี่ยงของท่านคือ ' + totalScore + ' คะแนน\nขอบคุณที่กรอกแบบฟอร์ม!',
+//         icon: totalScore > 10 ? 'warning' : 'success',
+//         confirmButtonText: 'ตกลง',
+//         confirmButtonColor: totalScore > 10 ? '#d33' : '#3085d6'
+//       };
+      
+//       Swal.fire(alertConfig).then(() => {
+//         location.reload();
+//       });
+//     } else {
+//       throw new Error('Network response was not ok.');
+//     }
+//   })
+//   .catch(error => {
+//     console.error('There was a problem with the fetch operation:', error);
+//     Swal.fire({
+//       title: 'เกิดข้อผิดพลาด',
+//       text: 'ไม่สามารถส่งข้อมูลได้ กรุณาลองใหม่อีกครั้ง',
+//       icon: 'error',
+//       confirmButtonText: 'ตกลง'
+//     });
+//   });
+// }
+  </script>
+</body>
+</html>
